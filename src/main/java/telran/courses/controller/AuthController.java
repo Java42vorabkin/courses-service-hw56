@@ -5,6 +5,7 @@ import java.util.Base64;
 import javax.validation.Valid;
 
 import org.slf4j.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,8 @@ import telran.courses.security.*;
 @RequestMapping("/login")
 @CrossOrigin
 public class AuthController {
+	@Value("${app.security.enable: true}")
+	private boolean securityEnable;
 	static Logger LOG = LoggerFactory.getLogger(AuthController.class);
 	AccountingManagement accounting;
 	PasswordEncoder passwordEncoder;
@@ -28,6 +31,10 @@ public class AuthController {
 	@PostMapping
 	LoginResponse login( @RequestBody @Valid LoginData loginData) {
 		LOG.debug("login data are email {}, password: {}", loginData.email, loginData.password);
+		if(!securityEnable) {
+			LOG.debug("Security enable is {}", securityEnable);
+			return new LoginResponse("", "ADMIN");
+		}
 		Account account = accounting.getAccount(loginData.email);
 		
 		if(account == null || !passwordEncoder.matches(loginData.password, account.getPasswordHash())) {
